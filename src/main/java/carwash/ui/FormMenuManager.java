@@ -51,6 +51,8 @@ public class FormMenuManager extends javax.swing.JFrame {
 
         lblSambutan = new javax.swing.JLabel();
         btnLogout = new javax.swing.JButton();
+        btnKelolaTanggal = new javax.swing.JButton();
+        btnKatalog = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Menu Manager");
@@ -64,25 +66,50 @@ public class FormMenuManager extends javax.swing.JFrame {
             }
         });
 
+        btnKelolaTanggal.setText("Kelola Tanggal Merah");
+        btnKelolaTanggal.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnKelolaTanggalActionPerformed(evt);
+            }
+        });
+
+        btnKatalog.setText("Lihat Katalog dan Stok");
+        btnKatalog.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnKatalogActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(67, 67, 67)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnLogout)
-                    .addComponent(lblSambutan, javax.swing.GroupLayout.PREFERRED_SIZE, 271, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(62, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(67, 67, 67)
+                        .addComponent(lblSambutan, javax.swing.GroupLayout.PREFERRED_SIZE, 271, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnLogout))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(btnKelolaTanggal, javax.swing.GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)
+                            .addComponent(btnKatalog, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(31, 31, 31)
-                .addComponent(lblSambutan)
-                .addGap(77, 77, 77)
-                .addComponent(btnLogout)
-                .addContainerGap(153, Short.MAX_VALUE))
+                .addGap(28, 28, 28)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblSambutan)
+                    .addComponent(btnLogout))
+                .addGap(33, 33, 33)
+                .addComponent(btnKelolaTanggal)
+                .addGap(18, 18, 18)
+                .addComponent(btnKatalog)
+                .addContainerGap(152, Short.MAX_VALUE))
         );
 
         pack();
@@ -93,6 +120,14 @@ public class FormMenuManager extends javax.swing.JFrame {
         new FormLogin().setVisible(true);
         dispose();
     }//GEN-LAST:event_btnLogoutActionPerformed
+
+    private void btnKelolaTanggalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnKelolaTanggalActionPerformed
+        new FormTanggalMerah().setVisible(true);   // menu tidak ditutup
+    }//GEN-LAST:event_btnKelolaTanggalActionPerformed
+
+    private void btnKatalogActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnKatalogActionPerformed
+new FormKatalog().setVisible(true);
+    }//GEN-LAST:event_btnKatalogActionPerformed
 
     /**
      * @param args the command line arguments
@@ -130,6 +165,8 @@ public class FormMenuManager extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnKatalog;
+    private javax.swing.JButton btnKelolaTanggal;
     private javax.swing.JButton btnLogout;
     private javax.swing.JLabel lblSambutan;
     // End of variables declaration//GEN-END:variables

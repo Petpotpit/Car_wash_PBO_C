@@ -1,0 +1,376 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package carwash.ui;
+
+import carwash.data.CsvRepository;
+import carwash.exception.AksesDitolakException;
+import carwash.exception.InputTidakValidException;
+import carwash.exception.PenyimpananGagalException;
+import carwash.logic.CatalogService;
+import carwash.logic.Session;
+import carwash.model.Item;
+import carwash.model.Product;
+import carwash.model.Role;
+import java.io.IOException;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Locale;
+import javax.swing.JOptionPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.table.DefaultTableModel;
+
+/**
+ *
+ * @author argor
+ */
+public class FormKatalog extends javax.swing.JFrame {
+    private CatalogService catalog;
+    private DefaultTableModel model;
+    private final NumberFormat fmt = NumberFormat.getInstance(Locale.forLanguageTag("id-ID"));
+    /**
+     * Creates new form FormKatalog
+     */
+    public FormKatalog() {
+        initComponents();
+        if (!Session.isLoggedIn()) {          // semua peran boleh melihat, tapi harus login
+            dispose();
+            new FormLogin().setVisible(true);
+            return;
+        }
+
+        setLocationRelativeTo(null);
+
+        model = new DefaultTableModel(new Object[]{"ID", "Nama", "Kategori", "Harga", "Stok"}, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return false; }
+        };
+        tblKatalog.setModel(model);
+        tblKatalog.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tblKatalog.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) isiInputDariBaris();
+        });
+
+        boolean kasir = Session.getUser().getRole() == Role.KASIR;
+        pnlEdit.setVisible(kasir);            // Manager: mode lihat saja
+
+        try {
+            CsvRepository repo = new CsvRepository();
+            catalog = new CatalogService(repo, repo.muatKatalog());
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Gagal memuat katalog: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            catalog = new CatalogService(new CsvRepository(), new ArrayList<>());
+            pnlEdit.setVisible(false);
+        }
+        refreshTabel();
+    }
+
+    private void refreshTabel() {
+        model.setRowCount(0);
+        for (Item it : catalog.getDaftar()) {
+            Object stok = (it instanceof Product p) ? p.getStok() : "-";
+            model.addRow(new Object[]{it.getId(), it.getNama(), it.getKategori(),
+                "Rp " + fmt.format((long) it.getHarga()), stok});
+        }
+    }
+
+    private void isiInputDariBaris() {
+        String id = idTerpilih(false);
+        if (id == null) return;
+        Item it = catalog.cariById(id);
+        if (it == null) return;
+        txtNama.setText(it.getNama());
+        txtHarga.setText(String.valueOf((long) it.getHarga()));
+        txtStok.setText(it instanceof Product p ? String.valueOf(p.getStok()) : "");
+    }
+
+    /** @param tampilPesan true -> tampilkan dialog jika belum ada baris terpilih */
+    private String idTerpilih(boolean tampilPesan) {
+        int row = tblKatalog.getSelectedRow();
+        if (row < 0) {
+            if (tampilPesan) {
+                JOptionPane.showMessageDialog(this, "Pilih item di tabel terlebih dahulu",
+                        "Belum memilih", JOptionPane.INFORMATION_MESSAGE);
+            }
+            return null;
+        }
+        return (String) model.getValueAt(row, 0);
+    }
+
+    private void kosongkanInput() {
+        txtNama.setText("");
+        txtHarga.setText("");
+        txtStok.setText("");
+        tblKatalog.clearSelection();
+    }
+
+    private void tampilPesan(Exception e) {
+        int tipe = (e instanceof InputTidakValidException)
+                ? JOptionPane.WARNING_MESSAGE : JOptionPane.ERROR_MESSAGE;
+        JOptionPane.showMessageDialog(this, e.getMessage(), "Tidak dapat diproses", tipe);
+    }
+
+    private void btnTambahActionPerformed(java.awt.event.ActionEvent evt) {
+        try {
+            String jenis = (String) cmbJenis.getSelectedItem();
+            if ("Produk".equals(jenis)) {
+                catalog.tambahProduct(txtNama.getText(), txtHarga.getText(),
+                        txtStok.getText(), Session.getUser());
+            } else {
+                catalog.tambahService(txtNama.getText(), txtHarga.getText(),
+                        "Cuci".equals(jenis), Session.getUser());
+            }
+            kosongkanInput();
+        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
+            tampilPesan(e);
+        }
+        refreshTabel();
+    }
+
+    private void btnUbahActionPerformed(java.awt.event.ActionEvent evt) {
+        String id = idTerpilih(true);
+        if (id == null) return;
+        try {
+            catalog.ubahItem(id, txtNama.getText(), txtHarga.getText(),
+                    txtStok.getText(), Session.getUser());
+            kosongkanInput();
+        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
+            tampilPesan(e);
+        }
+        refreshTabel();
+    }
+
+    private void btnRestockActionPerformed(java.awt.event.ActionEvent evt) {
+        String id = idTerpilih(true);
+        if (id == null) return;
+        String jumlah = JOptionPane.showInputDialog(this, "Jumlah restock:");
+        if (jumlah == null) return;           // dibatalkan
+        try {
+            catalog.restock(id, jumlah, Session.getUser());
+        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
+            tampilPesan(e);
+        }
+        refreshTabel();
+    }
+
+    private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {
+        String id = idTerpilih(true);
+        if (id == null) return;
+        int ok = JOptionPane.showConfirmDialog(this, "Hapus item " + id + "?",
+                "Konfirmasi", JOptionPane.YES_NO_OPTION);
+        if (ok != JOptionPane.YES_OPTION) return;
+        try {
+            catalog.hapus(id, Session.getUser());
+            kosongkanInput();
+        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
+            tampilPesan(e);
+        }
+        refreshTabel();
+    }
+    
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jScrollPane2 = new javax.swing.JScrollPane();
+        tblKatalog = new javax.swing.JTable();
+        pnlEdit = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        txtNama = new javax.swing.JTextField();
+        jLabel2 = new javax.swing.JLabel();
+        txtHarga = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        txtStok = new javax.swing.JTextField();
+        cmbJenis = new javax.swing.JComboBox<>();
+        btnTambah = new javax.swing.JButton();
+        btnUbah = new javax.swing.JButton();
+        btnRestock = new javax.swing.JButton();
+        btnHapus = new javax.swing.JButton();
+        jLabel4 = new javax.swing.JLabel();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        tblKatalog.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null},
+                {null, null, null, null}
+            },
+            new String [] {
+                "Title 1", "Title 2", "Title 3", "Title 4"
+            }
+        ));
+        jScrollPane2.setViewportView(tblKatalog);
+
+        jLabel1.setText("Nama");
+
+        jLabel2.setText("Harga");
+
+        jLabel3.setText("Stok");
+
+        cmbJenis.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Cuci", "Layanan Tambahan", "Produk" }));
+
+        btnTambah.setText("Tambah");
+
+        btnUbah.setText("Ubah");
+
+        btnRestock.setText("Restock");
+
+        btnHapus.setText("Hapus");
+
+        javax.swing.GroupLayout pnlEditLayout = new javax.swing.GroupLayout(pnlEdit);
+        pnlEdit.setLayout(pnlEditLayout);
+        pnlEditLayout.setHorizontalGroup(
+            pnlEditLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlEditLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(pnlEditLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(pnlEditLayout.createSequentialGroup()
+                        .addGroup(pnlEditLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(pnlEditLayout.createSequentialGroup()
+                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(45, 45, 45)
+                                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(pnlEditLayout.createSequentialGroup()
+                                .addComponent(txtNama, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(12, 12, 12)
+                                .addComponent(txtHarga, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(23, 23, 23)
+                        .addGroup(pnlEditLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(pnlEditLayout.createSequentialGroup()
+                                .addComponent(txtStok, javax.swing.GroupLayout.PREFERRED_SIZE, 74, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(pnlEditLayout.createSequentialGroup()
+                                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                    .addGroup(pnlEditLayout.createSequentialGroup()
+                        .addGroup(pnlEditLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(cmbJenis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(pnlEditLayout.createSequentialGroup()
+                                .addComponent(btnTambah, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(btnUbah, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(12, 12, 12)
+                                .addComponent(btnRestock, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnHapus, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addContainerGap(18, Short.MAX_VALUE))))
+        );
+        pnlEditLayout.setVerticalGroup(
+            pnlEditLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(pnlEditLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(pnlEditLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel3))
+                .addGap(18, 18, 18)
+                .addGroup(pnlEditLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtHarga, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtNama, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(txtStok, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(28, 28, 28)
+                .addComponent(cmbJenis, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(pnlEditLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnTambah)
+                    .addComponent(btnUbah)
+                    .addComponent(btnRestock)
+                    .addComponent(btnHapus))
+                .addContainerGap(19, Short.MAX_VALUE))
+        );
+
+        jLabel4.setText("Katalog");
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(100, 100, 100)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 367, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(pnlEdit, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(40, 40, 40)
+                        .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(184, Short.MAX_VALUE))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(20, 20, 20)
+                .addComponent(jLabel4)
+                .addGap(13, 13, 13)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(39, 39, 39)
+                .addComponent(pnlEdit, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
+        try {
+            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
+                    break;
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            java.util.logging.Logger.getLogger(FormKatalog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            java.util.logging.Logger.getLogger(FormKatalog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            java.util.logging.Logger.getLogger(FormKatalog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+            java.util.logging.Logger.getLogger(FormKatalog.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+        //</editor-fold>
+
+        /* Create and display the form */
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new FormKatalog().setVisible(true);
+            }
+        });
+    }
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnHapus;
+    private javax.swing.JButton btnRestock;
+    private javax.swing.JButton btnTambah;
+    private javax.swing.JButton btnUbah;
+    private javax.swing.JComboBox<String> cmbJenis;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JPanel pnlEdit;
+    private javax.swing.JTable tblKatalog;
+    private javax.swing.JTextField txtHarga;
+    private javax.swing.JTextField txtNama;
+    private javax.swing.JTextField txtStok;
+    // End of variables declaration//GEN-END:variables
+}

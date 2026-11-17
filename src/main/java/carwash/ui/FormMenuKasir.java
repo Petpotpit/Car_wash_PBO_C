@@ -54,6 +54,8 @@ private boolean aksesDiizinkan;
 
         lblSambutan = new javax.swing.JLabel();
         btnLogout = new javax.swing.JButton();
+        btnDaftarPelanggan = new javax.swing.JButton();
+        btnKatalog = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -66,25 +68,48 @@ private boolean aksesDiizinkan;
             }
         });
 
+        btnDaftarPelanggan.setText("DaftarPelanggan");
+        btnDaftarPelanggan.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDaftarPelangganActionPerformed(evt);
+            }
+        });
+
+        btnKatalog.setText("Katalog dan Stok");
+        btnKatalog.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnKatalogActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(42, 42, 42)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addGap(0, 42, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnLogout)
-                    .addComponent(lblSambutan, javax.swing.GroupLayout.PREFERRED_SIZE, 251, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(107, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblSambutan, javax.swing.GroupLayout.PREFERRED_SIZE, 251, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnLogout))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(btnDaftarPelanggan, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnKatalog, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 133, Short.MAX_VALUE)))
+                .addGap(17, 17, 17))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(68, 68, 68)
-                .addComponent(lblSambutan)
-                .addGap(44, 44, 44)
-                .addComponent(btnLogout)
-                .addContainerGap(149, Short.MAX_VALUE))
+                .addGap(27, 27, 27)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnLogout)
+                    .addComponent(lblSambutan))
+                .addGap(47, 47, 47)
+                .addComponent(btnDaftarPelanggan)
+                .addGap(18, 18, 18)
+                .addComponent(btnKatalog)
+                .addContainerGap(139, Short.MAX_VALUE))
         );
 
         pack();
@@ -95,6 +120,14 @@ private boolean aksesDiizinkan;
         new FormLogin().setVisible(true);
         dispose();
     }//GEN-LAST:event_btnLogoutActionPerformed
+
+    private void btnDaftarPelangganActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDaftarPelangganActionPerformed
+         new FormPendaftaran().setVisible(true);
+    }//GEN-LAST:event_btnDaftarPelangganActionPerformed
+
+    private void btnKatalogActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnKatalogActionPerformed
+new FormKatalog().setVisible(true);
+    }//GEN-LAST:event_btnKatalogActionPerformed
 
     /**
      * @param args the command line arguments
@@ -132,6 +165,8 @@ private boolean aksesDiizinkan;
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnDaftarPelanggan;
+    private javax.swing.JButton btnKatalog;
     private javax.swing.JButton btnLogout;
     private javax.swing.JLabel lblSambutan;
     // End of variables declaration//GEN-END:variables
