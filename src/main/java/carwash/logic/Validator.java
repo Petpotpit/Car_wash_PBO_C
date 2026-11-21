@@ -91,4 +91,36 @@ private static long parseBulat(String s, String pesan) throws InputTidakValidExc
         throw new InputTidakValidException(pesan);
     }
 }
+
+/** Bilangan bulat lebih dari 0. */
+public static int validasiQty(String qty) throws InputTidakValidException {
+    String pesan = "Qty harus berupa bilangan bulat lebih dari 0";
+    long v = parseBulat(qty, pesan);
+    if (v <= 0 || v > Integer.MAX_VALUE) throw new InputTidakValidException(pesan);
+    return (int) v;
+}
+
+/** Bilangan bulat rupiah, tidak negatif. */
+public static long validasiUang(String uang) throws InputTidakValidException {
+    String pesan = "Uang diterima harus berupa angka bulat, tidak negatif";
+    long v = parseBulat(uang, pesan);
+    if (v < 0) throw new InputTidakValidException(pesan);
+    return v;
+}
+/** Bilangan bulat 0 sampai 10. */
+public static int validasiHitungan(String s) throws InputTidakValidException {
+    String pesan = "Hitungan harus berupa bilangan bulat 0 sampai 10";
+    long v = parseBulat(s, pesan);
+    if (v < 0 || v > 10) throw new InputTidakValidException(pesan);
+    return (int) v;
+}
+
+/** Wajib diisi, tanpa koma (karena disimpan di CSV). */
+public static String validasiAlasan(String alasan) throws InputTidakValidException {
+    String a = (alasan == null) ? "" : alasan.trim();
+    if (a.isEmpty()) throw new InputTidakValidException("Alasan wajib diisi");
+    if (a.contains(",")) throw new InputTidakValidException("Alasan tidak boleh mengandung koma");
+    return a;
+}
+
 }

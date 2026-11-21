@@ -53,6 +53,7 @@ public class FormMenuManager extends javax.swing.JFrame {
         btnLogout = new javax.swing.JButton();
         btnKelolaTanggal = new javax.swing.JButton();
         btnKatalog = new javax.swing.JButton();
+        btnRiwayat = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Menu Manager");
@@ -80,6 +81,13 @@ public class FormMenuManager extends javax.swing.JFrame {
             }
         });
 
+        btnRiwayat.setText("Riwayat dan Log Koreksi");
+        btnRiwayat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRiwayatActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -93,10 +101,12 @@ public class FormMenuManager extends javax.swing.JFrame {
                         .addComponent(btnLogout))
                     .addGroup(layout.createSequentialGroup()
                         .addGap(20, 20, 20)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(btnKelolaTanggal, javax.swing.GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)
-                            .addComponent(btnKatalog, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnRiwayat)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(btnKelolaTanggal, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(btnKatalog, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
+                .addContainerGap(5374, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -109,7 +119,9 @@ public class FormMenuManager extends javax.swing.JFrame {
                 .addComponent(btnKelolaTanggal)
                 .addGap(18, 18, 18)
                 .addComponent(btnKatalog)
-                .addContainerGap(152, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(btnRiwayat)
+                .addContainerGap(111, Short.MAX_VALUE))
         );
 
         pack();
@@ -128,6 +140,10 @@ public class FormMenuManager extends javax.swing.JFrame {
     private void btnKatalogActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnKatalogActionPerformed
 new FormKatalog().setVisible(true);
     }//GEN-LAST:event_btnKatalogActionPerformed
+
+    private void btnRiwayatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRiwayatActionPerformed
+        new FormRiwayat(null).setVisible(true);
+    }//GEN-LAST:event_btnRiwayatActionPerformed
 
     /**
      * @param args the command line arguments
@@ -168,6 +184,7 @@ new FormKatalog().setVisible(true);
     private javax.swing.JButton btnKatalog;
     private javax.swing.JButton btnKelolaTanggal;
     private javax.swing.JButton btnLogout;
+    private javax.swing.JButton btnRiwayat;
     private javax.swing.JLabel lblSambutan;
     // End of variables declaration//GEN-END:variables
 }

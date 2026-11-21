@@ -8,6 +8,7 @@ import carwash.data.CsvRepository;
 import carwash.exception.AksesDitolakException;
 import carwash.exception.InputTidakValidException;
 import carwash.exception.PenyimpananGagalException;
+import carwash.exception.CustomerNotFoundException;
 import carwash.model.Customer;
 import carwash.model.Role;
 import carwash.model.User;
@@ -107,4 +108,17 @@ public class CustomerService {
         }
         return String.format("C%03d", max + 1);
     }
+    
+    /** Cari lewat ID, telepon, atau nama. Pesan error langsung siap ditampilkan. */
+public List<Customer> cariWajib(String kata)
+        throws InputTidakValidException, CustomerNotFoundException {
+    if (kata == null || kata.trim().isEmpty()) {
+        throw new InputTidakValidException("Isi ID, telepon, atau nama pelanggan");
+    }
+    List<Customer> hasil = cari(kata);
+    if (hasil.isEmpty()) {
+        throw new CustomerNotFoundException("Pelanggan tidak ditemukan");
+    }
+    return hasil;
+}
 }

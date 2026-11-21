@@ -160,4 +160,8 @@ public class CatalogService {
         }
         return String.format("%s%02d", prefix, max + 1);
     }
+    
+    public void simpan() throws IOException {
+    repo.simpanKatalog(katalog);
+}
 }

@@ -3,6 +3,7 @@ package carwash.logic;
 import carwash.exception.InputTidakValidException;
 import carwash.exception.LoginGagalException;
 import carwash.model.User;
+import carwash.model.Role;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -11,6 +12,8 @@ import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Comparator;
+import java.util.ArrayList;
 
 public class AuthService {
 
@@ -83,4 +86,13 @@ public class AuthService {
         byte[] b = p[1].getBytes(StandardCharsets.UTF_8);
         return MessageDigest.isEqual(a, b); // perbandingan waktu-konstan
     }
+    
+    public List<User> getDaftarKasir() {
+    List<User> hasil = new ArrayList<>();
+    for (User u : users.values()) {
+        if (u.getRole() == Role.KASIR) hasil.add(u);
+    }
+    hasil.sort(Comparator.comparing(User::getId));
+    return hasil;
+}
 }

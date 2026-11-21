@@ -4,39 +4,29 @@
  */
 package carwash.ui;
 
-import carwash.data.CsvRepository;
 import carwash.exception.InputTidakValidException;
 import carwash.exception.LoginGagalException;
 import carwash.logic.AuthService;
 import carwash.logic.Session;
 import carwash.model.Role;
 import carwash.model.User;
-import java.io.IOException;
 import javax.swing.JOptionPane;
+import carwash.logic.AppContext;
 /**
  *
  * @author argor
  */
 public class FormLogin extends javax.swing.JFrame {
     
-    private AuthService authService;
+   private final AuthService authService = AppContext.get().getAuth();
     /**
      * Creates new form FormLogin
      */
     public FormLogin() {
-        initComponents();
-        setLocationRelativeTo(null);               // tengah layar
-        getRootPane().setDefaultButton(btnMasuk);  // Enter = klik Masuk
-
-        try {
-            authService = new AuthService(new CsvRepository().muatUsers());
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this,
-                    "Gagal memuat data akun: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            btnMasuk.setEnabled(false);
-        }
-    }
+    initComponents();
+    setLocationRelativeTo(null);
+    getRootPane().setDefaultButton(btnMasuk);
+}
 
     /**
      * This method is called from within the constructor to initialize the form.

@@ -4,7 +4,7 @@
  */
 package carwash.ui;
 
-import carwash.data.CsvRepository;
+import carwash.logic.AppContext;
 import carwash.exception.AksesDitolakException;
 import carwash.exception.InputTidakValidException;
 import carwash.exception.PenyimpananGagalException;
@@ -12,7 +12,6 @@ import carwash.logic.CustomerService;
 import carwash.logic.Session;
 import carwash.model.Customer;
 import carwash.model.Role;
-import java.io.IOException;
 import javax.swing.JOptionPane;
 
 /**
@@ -20,31 +19,20 @@ import javax.swing.JOptionPane;
  * @author argor
  */
 public class FormPendaftaran extends javax.swing.JFrame {
-    private CustomerService customerService;
-    /**
-     * Creates new form FormPendaftaran
-     */
-    public FormPendaftaran() {
-        initComponents();
-        // Lapis kedua: hanya Kasir
-        if (!Session.isLoggedIn() || Session.getUser().getRole() != Role.KASIR) {
-            dispose();
-            new FormLogin().setVisible(true);
-            return;
-        }
+    private final CustomerService customerService = AppContext.get().getCustomers();
 
-        setLocationRelativeTo(null);
-        getRootPane().setDefaultButton(btnDaftar);
+public FormPendaftaran() {
+    initComponents();
 
-        try {
-            CsvRepository repo = new CsvRepository();
-            customerService = new CustomerService(repo, repo.muatCustomers());
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Gagal memuat data pelanggan: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            btnDaftar.setEnabled(false);
-        }
+    if (!Session.isLoggedIn() || Session.getUser().getRole() != Role.KASIR) {
+        dispose();
+        new FormLogin().setVisible(true);
+        return;
     }
+
+    setLocationRelativeTo(null);
+    getRootPane().setDefaultButton(btnDaftar);
+}
     
 
     /**

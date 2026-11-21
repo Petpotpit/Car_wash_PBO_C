@@ -10,6 +10,7 @@ package carwash.ui;
  */
 
 import carwash.data.CsvRepository;
+import carwash.logic.AppContext;
 import carwash.exception.AksesDitolakException;
 import carwash.exception.InputTidakValidException;
 import carwash.logic.HolidayCalendar;
@@ -24,32 +25,21 @@ import javax.swing.JOptionPane;
 
 
 public class FormTanggalMerah extends javax.swing.JFrame {
-    private final CsvRepository repo = new CsvRepository();
-    private HolidayCalendar kalender;
-    /**
-     * Creates new form FormTanggalMerah
-     */
-    public FormTanggalMerah() {
-        initComponents();
-         // Lapis kedua: hanya Manager
-        if (!Session.isLoggedIn() || Session.getUser().getRole() != Role.MANAGER) {
-            dispose();
-            new FormLogin().setVisible(true);
-            return;
-        }
+    private final CsvRepository repo = AppContext.get().getRepo();
+private final HolidayCalendar kalender = AppContext.get().getKalender();
 
-        setLocationRelativeTo(null);
-        try {
-            kalender = new HolidayCalendar(repo.muatTanggalMerah());
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Gagal memuat tanggal merah: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            kalender = new HolidayCalendar(java.util.Collections.emptyList());
-            btnTambah.setEnabled(false);
-            btnHapus.setEnabled(false);
-        }
-        refreshList();
+public FormTanggalMerah() {
+    initComponents();
+
+    if (!Session.isLoggedIn() || Session.getUser().getRole() != Role.MANAGER) {
+        dispose();
+        new FormLogin().setVisible(true);
+        return;
     }
+
+    setLocationRelativeTo(null);
+    refreshList();
+}
 
     private void refreshList() {
         DefaultListModel<String> model = new DefaultListModel<>();

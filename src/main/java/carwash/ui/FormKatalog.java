@@ -5,6 +5,7 @@
 package carwash.ui;
 
 import carwash.data.CsvRepository;
+import carwash.logic.AppContext;
 import carwash.exception.AksesDitolakException;
 import carwash.exception.InputTidakValidException;
 import carwash.exception.PenyimpananGagalException;
@@ -26,45 +27,33 @@ import javax.swing.table.DefaultTableModel;
  * @author argor
  */
 public class FormKatalog extends javax.swing.JFrame {
-    private CatalogService catalog;
-    private DefaultTableModel model;
-    private final NumberFormat fmt = NumberFormat.getInstance(Locale.forLanguageTag("id-ID"));
-    /**
-     * Creates new form FormKatalog
-     */
-    public FormKatalog() {
-        initComponents();
-        if (!Session.isLoggedIn()) {          // semua peran boleh melihat, tapi harus login
-            dispose();
-            new FormLogin().setVisible(true);
-            return;
-        }
+    private final CatalogService catalog = AppContext.get().getCatalog();
+private DefaultTableModel model;
+private final NumberFormat fmt = NumberFormat.getInstance(Locale.forLanguageTag("id-ID"));
 
-        setLocationRelativeTo(null);
+public FormKatalog() {
+    initComponents();
 
-        model = new DefaultTableModel(new Object[]{"ID", "Nama", "Kategori", "Harga", "Stok"}, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
-        };
-        tblKatalog.setModel(model);
-        tblKatalog.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblKatalog.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) isiInputDariBaris();
-        });
-
-        boolean kasir = Session.getUser().getRole() == Role.KASIR;
-        pnlEdit.setVisible(kasir);            // Manager: mode lihat saja
-
-        try {
-            CsvRepository repo = new CsvRepository();
-            catalog = new CatalogService(repo, repo.muatKatalog());
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Gagal memuat katalog: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            catalog = new CatalogService(new CsvRepository(), new ArrayList<>());
-            pnlEdit.setVisible(false);
-        }
-        refreshTabel();
+    if (!Session.isLoggedIn()) {
+        dispose();
+        new FormLogin().setVisible(true);
+        return;
     }
+
+    setLocationRelativeTo(null);
+
+    model = new DefaultTableModel(new Object[]{"ID", "Nama", "Kategori", "Harga", "Stok"}, 0) {
+        @Override public boolean isCellEditable(int r, int c) { return false; }
+    };
+    tblKatalog.setModel(model);
+    tblKatalog.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    tblKatalog.getSelectionModel().addListSelectionListener(e -> {
+        if (!e.getValueIsAdjusting()) isiInputDariBaris();
+    });
+
+    pnlEdit.setVisible(Session.getUser().getRole() == Role.KASIR);
+    refreshTabel();
+}
 
     private void refreshTabel() {
         model.setRowCount(0);
@@ -111,65 +100,7 @@ public class FormKatalog extends javax.swing.JFrame {
         JOptionPane.showMessageDialog(this, e.getMessage(), "Tidak dapat diproses", tipe);
     }
 
-    private void btnTambahActionPerformed(java.awt.event.ActionEvent evt) {
-        try {
-            String jenis = (String) cmbJenis.getSelectedItem();
-            if ("Produk".equals(jenis)) {
-                catalog.tambahProduct(txtNama.getText(), txtHarga.getText(),
-                        txtStok.getText(), Session.getUser());
-            } else {
-                catalog.tambahService(txtNama.getText(), txtHarga.getText(),
-                        "Cuci".equals(jenis), Session.getUser());
-            }
-            kosongkanInput();
-        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
-            tampilPesan(e);
-        }
-        refreshTabel();
-    }
-
-    private void btnUbahActionPerformed(java.awt.event.ActionEvent evt) {
-        String id = idTerpilih(true);
-        if (id == null) return;
-        try {
-            catalog.ubahItem(id, txtNama.getText(), txtHarga.getText(),
-                    txtStok.getText(), Session.getUser());
-            kosongkanInput();
-        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
-            tampilPesan(e);
-        }
-        refreshTabel();
-    }
-
-    private void btnRestockActionPerformed(java.awt.event.ActionEvent evt) {
-        String id = idTerpilih(true);
-        if (id == null) return;
-        String jumlah = JOptionPane.showInputDialog(this, "Jumlah restock:");
-        if (jumlah == null) return;           // dibatalkan
-        try {
-            catalog.restock(id, jumlah, Session.getUser());
-        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
-            tampilPesan(e);
-        }
-        refreshTabel();
-    }
-
-    private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {
-        String id = idTerpilih(true);
-        if (id == null) return;
-        int ok = JOptionPane.showConfirmDialog(this, "Hapus item " + id + "?",
-                "Konfirmasi", JOptionPane.YES_NO_OPTION);
-        if (ok != JOptionPane.YES_OPTION) return;
-        try {
-            catalog.hapus(id, Session.getUser());
-            kosongkanInput();
-        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
-            tampilPesan(e);
-        }
-        refreshTabel();
-    }
-    
-
+   
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -219,12 +150,32 @@ public class FormKatalog extends javax.swing.JFrame {
         cmbJenis.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Cuci", "Layanan Tambahan", "Produk" }));
 
         btnTambah.setText("Tambah");
+        btnTambah.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTambahActionPerformed(evt);
+            }
+        });
 
         btnUbah.setText("Ubah");
+        btnUbah.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUbahActionPerformed(evt);
+            }
+        });
 
         btnRestock.setText("Restock");
+        btnRestock.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRestockActionPerformed(evt);
+            }
+        });
 
         btnHapus.setText("Hapus");
+        btnHapus.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnHapusActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout pnlEditLayout = new javax.swing.GroupLayout(pnlEdit);
         pnlEdit.setLayout(pnlEditLayout);
@@ -320,6 +271,64 @@ public class FormKatalog extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnTambahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTambahActionPerformed
+        try {
+            String jenis = (String) cmbJenis.getSelectedItem();
+            if ("Produk".equals(jenis)) {
+                catalog.tambahProduct(txtNama.getText(), txtHarga.getText(),
+                        txtStok.getText(), Session.getUser());
+            } else {
+                catalog.tambahService(txtNama.getText(), txtHarga.getText(),
+                        "Cuci".equals(jenis), Session.getUser());
+            }
+            kosongkanInput();
+        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
+            tampilPesan(e);
+        }
+        refreshTabel();
+    }//GEN-LAST:event_btnTambahActionPerformed
+
+    private void btnUbahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUbahActionPerformed
+        String id = idTerpilih(true);
+        if (id == null) return;
+        try {
+            catalog.ubahItem(id, txtNama.getText(), txtHarga.getText(),
+                    txtStok.getText(), Session.getUser());
+            kosongkanInput();
+        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
+            tampilPesan(e);
+        }
+        refreshTabel();
+    }//GEN-LAST:event_btnUbahActionPerformed
+
+    private void btnRestockActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRestockActionPerformed
+        String id = idTerpilih(true);
+        if (id == null) return;
+        String jumlah = JOptionPane.showInputDialog(this, "Jumlah restock:");
+        if (jumlah == null) return;           // dibatalkan
+        try {
+            catalog.restock(id, jumlah, Session.getUser());
+        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
+            tampilPesan(e);
+        }
+        refreshTabel();
+    }//GEN-LAST:event_btnRestockActionPerformed
+
+    private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
+        String id = idTerpilih(true);
+        if (id == null) return;
+        int ok = JOptionPane.showConfirmDialog(this, "Hapus item " + id + "?",
+                "Konfirmasi", JOptionPane.YES_NO_OPTION);
+        if (ok != JOptionPane.YES_OPTION) return;
+        try {
+            catalog.hapus(id, Session.getUser());
+            kosongkanInput();
+        } catch (InputTidakValidException | AksesDitolakException | PenyimpananGagalException e) {
+            tampilPesan(e);
+        }
+        refreshTabel();
+    }//GEN-LAST:event_btnHapusActionPerformed
 
     /**
      * @param args the command line arguments
